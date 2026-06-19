@@ -1,0 +1,12 @@
+# Swift Package Manager build artifacts
+.build/
+.swiftpm/
+
+# Built app bundle (produced by scripts/build_app.sh)
+Typer+.app/
+
+# macOS
+.DS_Store
+
+# Tooling scratch
+.playwright-mcp/
