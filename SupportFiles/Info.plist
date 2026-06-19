@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.aus.typerplus</string>
+    <key>CFBundleExecutable</key>
+    <string>TyperPlus</string>
+    <key>CFBundleName</key>
+    <string>Typer+</string>
+    <key>CFBundleDisplayName</key>
+    <string>Typer+</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <!-- Regular windowed app (Dock icon + main window). It still installs a menu-bar
+         item + global hotkey, but is no longer an LSUIElement agent. -->
+    <key>LSUIElement</key>
+    <false/>
+    <key>NSAccessibilityUsageDescription</key>
+    <string>Typer+ types your text into the focused app as real keystrokes, and watches for the Esc-Esc-Esc stop gesture.</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>Typer+ — personal use.</string>
+    <!-- Programmatic control: `open typerplus://clipboard` and `typerplus://stop`. -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.aus.typerplus.control</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>typerplus</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>
