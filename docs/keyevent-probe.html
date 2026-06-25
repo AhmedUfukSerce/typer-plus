@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Typer+ — key-event probe (Test A)</title>
+<style>
+  :root { font-family: -apple-system, system-ui, sans-serif; }
+  body { margin: 0; padding: 24px; background:#0f1115; color:#e6e6e6; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.sub { color:#9aa0aa; margin: 0 0 16px; font-size: 13px; }
+  ol { color:#cdd2db; font-size: 14px; line-height: 1.6; }
+  #box { width: 100%; height: 110px; font-size: 15px; padding: 12px;
+         border-radius: 10px; border: 2px solid #3a4150; background:#1a1d24;
+         color:#fff; box-sizing: border-box; }
+  #box:focus { border-color:#5b8cff; outline: none; }
+  #verdict { margin: 16px 0; padding: 14px 16px; border-radius: 10px;
+             font-size: 16px; font-weight: 600; background:#1a1d24; border:1px solid #3a4150; }
+  .pass { background:#0f2e17 !important; border-color:#1f7a36 !important; color:#7ee29a !important; }
+  .fail { background:#33161a !important; border-color:#a3303c !important; color:#ff9aa6 !important; }
+  table { width:100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  th, td { text-align:left; padding: 4px 8px; border-bottom:1px solid #262b34; }
+  th { color:#8a909b; position: sticky; top:0; background:#0f1115; }
+  td.t { color:#7ee29a; } td.f { color:#ff9aa6; font-weight:700; }
+  #wrap { max-height: 320px; overflow:auto; border:1px solid #262b34; border-radius:8px; }
+  code { background:#23272f; padding:1px 5px; border-radius:4px; }
+  button { background:#2a2f3a; color:#fff; border:1px solid #3a4150; border-radius:8px;
+           padding:6px 12px; font-size:13px; cursor:pointer; }
+</style>
+</head>
+<body>
+  <h1>Typer+ — key-event probe (Test A)</h1>
+  <p class="sub">Confirms a web page sees the injected keystrokes as real hardware (<code>isTrusted: true</code>, <code>inputType: "insertText"</code>) and that no paste event fires.</p>
+  <ol>
+    <li><b>Click inside the box below</b> so it has focus.</li>
+    <li>Wait ~7 seconds — Typer+ will type a test sentence into it.</li>
+    <li>Read the verdict banner + the event log. Tell Claude the result.</li>
+  </ol>
+
+  <textarea id="box" placeholder="Click here, then wait for the injected text…"></textarea>
+  <div id="verdict">Waiting for keystrokes… (click the box and run the injector)</div>
+  <button onclick="reset()">Reset</button>
+
+  <div id="wrap">
+    <table>
+      <thead><tr><th>#</th><th>type</th><th>isTrusted</th><th>key</th><th>code</th><th>inputType</th><th>data</th></tr></thead>
+      <tbody id="log"></tbody>
+    </table>
+  </div>
+
+<script>
+  let n = 0, trustedKeyDowns = 0, sawInsertText = false, sawPaste = false,
+      sawUntrusted = false, emptyCode = 0;
+  const log = document.getElementById('log');
+  const verdict = document.getElementById('verdict');
+
+  function row(e) {
+    n++;
+    const it = e.inputType || '';
+    if (e.type === 'keydown' && e.isTrusted) trustedKeyDowns++;
+    if (e.type === 'keydown' && e.isTrusted && (e.code === '' || e.code === 'Unidentified')) emptyCode++;
+    if (it === 'insertText') sawInsertText = true;
+    if (e.type === 'paste' || it === 'insertFromPaste') sawPaste = true;
+    if ((e.type === 'keydown' || e.type === 'beforeinput' || e.type === 'input') && e.isTrusted === false) sawUntrusted = true;
+
+    const tr = document.createElement('tr');
+    const cells = [n, e.type, String(e.isTrusted), e.key ?? '', e.code ?? '', it, (e.data ?? '')];
+    cells.forEach((c, i) => {
+      const td = document.createElement('td');
+      td.textContent = c;
+      if (i === 2) td.className = (String(e.isTrusted) === 'true') ? 't' : 'f';
+      tr.appendChild(td);
+    });
+    log.appendChild(tr);
+    document.getElementById('wrap').scrollTop = 1e9;
+    update();
+  }
+
+  function update() {
+    let cls, msg;
+    if (sawPaste) { cls = 'fail'; msg = '✗ FAIL — a PASTE event fired. That should never happen (we type char-by-char).'; }
+    else if (sawUntrusted) { cls = 'fail'; msg = '✗ FAIL — saw isTrusted=false. The page can tell these are synthetic.'; }
+    else if (trustedKeyDowns > 0 && sawInsertText) {
+      cls = 'pass';
+      msg = `✓ PASS — ${trustedKeyDowns} trusted keydowns, inputType "insertText", no paste.`
+          + (emptyCode > 0 ? `  ⚠ Note: ${emptyCode} keydown(s) had an empty event.code (Unicode path). Tell Claude — may want the keycode path.` : '  event.code present too.');
+    } else { cls = ''; msg = 'Waiting for keystrokes… (click the box and run the injector)'; }
+    verdict.className = cls;
+    verdict.textContent = msg;
+  }
+
+  function reset() {
+    n = 0; trustedKeyDowns = 0; sawInsertText = false; sawPaste = false; sawUntrusted = false; emptyCode = 0;
+    log.innerHTML = ''; document.getElementById('box').value = ''; update();
+  }
+
+  ['keydown','beforeinput','input','paste','copy','cut'].forEach(t =>
+    document.addEventListener(t, row, true));
+</script>
+</body>
+</html>
