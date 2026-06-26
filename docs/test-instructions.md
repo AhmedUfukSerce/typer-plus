@@ -1,4 +1,4 @@
-# Injection de-risk test — run this before trusting the build
+# Injection de-risk test: run this before trusting the build
 
 `RESEARCH.md §6` flags two premises the whole project rests on. This 5-minute
 test confirms both. **You run it** (it injects into the real keyboard, so an
@@ -9,7 +9,7 @@ agent/CI session must not).
 System Settings ▸ Privacy & Security ▸ Accessibility → enable **Terminal**
 (or iTerm). Without it, injected keystrokes are silently ignored.
 
-## Test A — `isTrusted` / `inputType` (pure-web proctoring premise)
+## Test A: `isTrusted` / `inputType` (pure-web proctoring premise)
 
 This proves a web page sees our keystrokes as real hardware input.
 
@@ -24,7 +24,7 @@ This proves a web page sees our keystrokes as real hardware input.
        console.log(t, '| isTrusted=', e.isTrusted,
                    '| key=', e.key, '| inputType=', e.inputType,
                    '| data=', e.data), true));
-   console.log('listener armed — focus the field and run InjectTest');
+   console.log('listener armed, focus the field and run InjectTest');
    ```
 3. Click into the text field on the page.
 4. In Terminal, from this folder, run:
@@ -43,7 +43,7 @@ us from hardware typing.
 not trusted in this context; tell me and we switch to the virtual-keycode path
 or re-evaluate.
 
-## Test B — Google Docs canvas ingestion (the dominant use case)
+## Test B: Google Docs canvas ingestion (the dominant use case)
 
 Newer Google Docs renders the editor to a `<canvas>`, not DOM inputs. This
 confirms it still ingests our Unicode keystrokes.
@@ -53,7 +53,7 @@ confirms it still ingests our Unicode keystrokes.
 3. Run `swift run InjectTest` and click back into the doc within the countdown.
 
 **PASS:** `The quick brown fox jumps 123 — café.` appears, typed
-character-by-character (watch it animate — it must not appear all at once).
+character-by-character (watch it animate, it must not appear all at once).
 Bonus: open **File ▸ Version history ▸ See version history** (or the Draftback
 extension) and confirm it shows incremental edits, not one paste blob.
 
