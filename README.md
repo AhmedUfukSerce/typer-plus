@@ -31,7 +31,7 @@ A naive bot gives itself away on timing alone. It fires keys on a metronome, oft
 Typer+ draws every gap from the same shaped distribution real typists produce, an ex-Gaussian: a tight core with a long right tail. The numbers come straight from the keystroke-dynamics research (the anchor is Dhakal et al. 2018, 136 million keystrokes), and they are laid out in [`RESEARCH.md`](RESEARCH.md).
 
 <div align="center">
-<img src="docs/typer-iki.svg" alt="Distribution of time between keystrokes: a person's right-skewed curve versus a bot's narrow sub-50ms spike" width="720">
+<img src="docs/typer-iki.svg" alt="Distribution of time between keystrokes: a person's right-skewed curve versus a bot's narrow sub-50ms spike" width="760">
 </div>
 
 All of that timing is on by default, and it is what the rhythm and the distribution above are really about. Turn on the human-errors layer in Settings and it goes a step further: it makes the occasional typo and goes back to fix it, adjacent-key slips, transpositions, doublings, sometimes corrected on the spot and sometimes a few characters later, the way you catch your own typo a beat too late, plus grammar and homophone slips it rereads and tidies at the end. The header animation up top is that layer in action. With reliable delivery switched off it will also let the next key start before the last one lifts, the way fast typists overlap.
