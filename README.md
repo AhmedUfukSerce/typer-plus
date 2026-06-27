@@ -49,29 +49,11 @@ Reach for **Max Stealth** when a document's version history is the thing that ma
 
 ## How it works
 
-Your text becomes a timed plan, then a player walks that plan and posts each key as a real event. The typo and grammar stages only run when you turn on the human-errors layer.
+Your text becomes a timed plan, then a player walks that plan and posts each key as a real event.
 
-```mermaid
-flowchart LR
-  T["your text"] --> C["TextCleanup<br/>tidy whitespace"]
-  C --> P
-  subgraph P["Planner: turn text into a timed plan"]
-    direction TB
-    TM["Timing<br/>ex-Gaussian gaps,<br/>dwell, rollover, pauses"]
-    TY["Typos<br/>slips, then fixes<br/>(opt-in)"]
-    GR["grammar slips<br/>(opt-in)"]
-  end
-  P --> A["a timed list of keystrokes"]
-  A --> PL["Player<br/>plays it on the main thread"]
-  PL --> KE["KeyboardEngine<br/>posts each key as a CGEvent"]
-  KE --> APP(["the app sees real,<br/>isTrusted keystrokes"])
-  KS["Esc Esc Esc"] -. stops it .-> PL
-  SI["password field"] -. freezes it .-> PL
-  classDef app fill:#10331f,stroke:#3fb950,color:#e6edf3;
-  classDef stop fill:#3d1418,stroke:#f85149,color:#e6edf3;
-  class APP app
-  class KS,SI stop
-```
+<div align="center">
+<img src="docs/typer-pipeline.svg" alt="Pipeline: your text becomes a human-timed plan, played as real CGEvents the app sees as isTrusted keystrokes" width="720">
+</div>
 
 ## Build
 
