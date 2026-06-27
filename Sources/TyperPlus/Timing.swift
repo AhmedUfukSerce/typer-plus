@@ -198,12 +198,6 @@ final class Timing {
         return max(p.dwellMin, min(p.dwellMax, d))
     }
 
-    /// Shift / modifier keys are held longer than letters.
-    func shiftDwellMs() -> Double {
-        rng.truncatedNormal(mean: p.dwellMean * 1.35, sd: p.dwellSD * 1.1,
-                            lo: p.dwellMin, hi: p.dwellMax * 1.4)
-    }
-
     func backspaceGapMs() -> Double {
         // Backspace bursts run a touch faster than forward typing, but for the human-paced
         // modes they must never cross the 45ms physiological floor (the #1 bot tell — and a

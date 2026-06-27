@@ -79,12 +79,6 @@ final class Planner {
     private var lastDownTime = 0.0   // DOWN time of the most recent char/special key (for Shift release)
     private var lastReleaseT = 0.0   // serialize mode: UP time of the most recent char/special key
     private var shiftHeld = false
-    private var deferredText: [Character]? = nil   // an omitted word, to be inserted later
-    private var deferredAt = 0
-    private var deferredCountdown = 0
-
-    private struct PendingFix { let start: Int; let wrongLen: Int; let correct: [Character] }
-    private var pending: [PendingFix] = []
 
     init(profile: TypingProfile, rng: RNG, persona: Persona = .neutral, serialize: Bool = false) {
         self.profile = profile
@@ -101,16 +95,12 @@ final class Planner {
         postErrorRemaining = 0; postErrorFactor = 1.0
         lastKeyId = ""; lastUpTime = 0; lastDownTime = 0; lastReleaseT = 0
         shiftHeld = false
-        deferredText = nil; deferredAt = 0; deferredCountdown = 0
-        pending.removeAll()
 
         let chars = Array(text)
         var i = 0
         while i < chars.count {
             i += handleChar(chars, at: i)
         }
-        if deferredText != nil { flushDeferredInsert() }
-        emitEndReview()
         releaseShift()
 
         let sorted = events.sorted { $0.t != $1.t ? $0.t < $1.t : $0.seq < $1.seq }
@@ -344,13 +334,6 @@ final class Planner {
         bufferLen -= n
     }
 
-    private func emitArrows(_ code: CGKeyCode, _ n: Int) {
-        guard n > 0 else { return }
-        for _ in 0..<n {
-            pressKey(code, iki: timing.arrowGapMs(), dwell: rng.uniform(20, 45))
-        }
-    }
-
     // MARK: - Character-level slips
 
     private func emitSlip(_ slip: Typos.Plan, chars: [Character], at i: Int,
@@ -394,41 +377,7 @@ final class Planner {
         return consumed
     }
 
-    // MARK: - Grammar / homophone slips (left mid-stream, fixed at the end)
-
-    /// Skip a word now (record it), so it can be inserted later via a back-jump — a
-    /// genuine non-linear, mid-document edit. Returns the source chars to skip.
-    private func maybeStartOmit(_ chars: [Character], at i: Int) -> Int? {
-        var j = i
-        while j < chars.count && isWordChar(chars[j]) { j += 1 }
-        guard j < chars.count, chars[j] == " " else { return nil }   // word + trailing space
-        let wlen = j - i
-        guard wlen >= 2 && wlen <= 6 else { return nil }
-        deferredText = Array(chars[i..<j]) + [" "]
-        deferredAt = bufferLen
-        deferredCountdown = rng.int(1, 3)
-        return wlen + 1   // skip the word AND its trailing space
-    }
-
-    /// Navigate back to the omission point, insert the missing word, return to the end.
-    private func flushDeferredInsert() {
-        guard let text = deferredText else { return }
-        deferredText = nil
-        let at = deferredAt
-        let left = bufferLen - at
-        guard left >= 0 else { return }
-        clock += rng.logNormal(median: 700, sigma: 0.5)   // "…I missed a word"
-        emitArrows(KeyMap.leftArrow, left)
-        typeRun(text, prev: nil)                           // insert the missing word + space
-        // shift any pending end-review fixes at/after the insertion point
-        pending = pending.map {
-            $0.start >= at
-                ? PendingFix(start: $0.start + text.count, wrongLen: $0.wrongLen, correct: $0.correct)
-                : $0
-        }
-        emitArrows(KeyMap.rightArrow, bufferLen - (at + text.count))
-        contiguous = 0
-    }
+    // MARK: - Grammar / homophone slips (corrected on the spot; Max Stealth may leave subtle ones)
 
     /// Type the next 2-4 words, pause, then delete them — a false start. The main loop
     /// then retypes them normally, so the final text is unchanged.
@@ -485,78 +434,6 @@ final class Planner {
             fixNow()
         }
         return word.count
-    }
-
-    /// Replay the scheduled events to reconstruct the exact on-screen buffer + caret —
-    /// so word-jump navigation lands precisely (the tool knows positions, not pixels).
-    private func replayBuffer() -> (buf: [Character], cursor: Int) {
-        let sorted = events.sorted { $0.t != $1.t ? $0.t < $1.t : $0.seq < $1.seq }
-        var buf: [Character] = []; var c = 0; var opt = false
-        for e in sorted {
-            switch e.op {
-            case .charDown(let ch): buf.insert(ch, at: min(c, buf.count)); c += 1
-            case .optionDown: opt = true
-            case .optionUp: opt = false
-            case .keyDown(let code):
-                switch code {
-                case KeyMap.backspace: if c > 0 { buf.remove(at: c - 1); c -= 1 }
-                case KeyMap.leftArrow: c = opt ? TextNav.wordLeft(buf, c) : max(0, c - 1)
-                case KeyMap.rightArrow: c = opt ? TextNav.wordRight(buf, c) : min(buf.count, c + 1)
-                case KeyMap.returnKey: buf.insert("\n", at: min(c, buf.count)); c += 1
-                case KeyMap.tab: buf.insert("\t", at: min(c, buf.count)); c += 1
-                default: break
-                }
-            default: break
-            }
-        }
-        return (buf, c)
-    }
-
-    private func emitModifier(_ op: Action.Op) {
-        clock += rng.uniform(20, 60)
-        schedule(clock, op)
-    }
-
-    /// Move the caret left to `target` via ⌥← word jumps (coarse, human) then plain ←
-    /// (exact). Returns the landed position.
-    /// Move the caret left to `target` using PLAIN ← only (one character per press).
-    /// ⌥← word-jumps were the corruption cause: real apps (Google Docs, Chrome, native
-    /// fields) each define "word" differently from our `TextNav.wordLeft` model, so the
-    /// caret landed somewhere we didn't expect and the backspaces deleted the wrong
-    /// characters. A plain ← moves exactly one character in EVERY field (and wraps across
-    /// newlines one position at a time), so the caret lands deterministically where the
-    /// planner's buffer model says it is. `buf` is retained for call-site symmetry.
-    private func navigateLeftTo(_ target: Int, from cursor: Int, buf: [Character]) -> Int {
-        var c = cursor
-        while c > target {
-            pressKey(KeyMap.leftArrow, iki: timing.arrowGapMs(), dwell: rng.uniform(20, 45))
-            c -= 1
-        }
-        return c
-    }
-
-    private func emitEndReview() {
-        guard !pending.isEmpty else { return }
-        clock += rng.logNormal(median: 1400, sigma: 0.5)   // re-reading pause
-
-        var (buf, cursor) = replayBuffer()
-        // Fix from the rightmost slip leftward, so each edit doesn't shift the next
-        // target and the caret only ever travels left (no robotic return-to-end).
-        // Everyday modes tidy up everything (clean output); Max Stealth leaves a few
-        // deferred slips unfixed too, for an organically-imperfect Docs history.
-        let fixProb = profile.mode == .maxStealth ? 0.85 : 1.0
-        for fix in pending.sorted(by: { $0.start > $1.start }) {
-            guard rng.bernoulli(fixProb) else { continue }
-            let target = fix.start + fix.wrongLen
-            guard target <= cursor, target <= buf.count else { continue }
-
-            cursor = navigateLeftTo(target, from: cursor, buf: buf)
-            emitBackspaces(fix.wrongLen, firstIki: rng.uniform(150, 400))
-            for _ in 0..<fix.wrongLen where cursor > 0 { buf.remove(at: cursor - 1); cursor -= 1 }
-            typeRun(fix.correct, prev: nil)
-            for ch in fix.correct { buf.insert(ch, at: min(cursor, buf.count)); cursor += 1 }
-        }
-        pending.removeAll()
     }
 
     // MARK: - Composition-rate pacing (Docs forensic mode)

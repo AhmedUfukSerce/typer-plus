@@ -184,12 +184,13 @@ struct HomeView: View {
     }
 
     private var statStrip: some View {
-        HStack(spacing: 0) {
-            stat("\(model.stats.totalSessions)", "sessions")
+        let s = model.stats   // compute once (Stats.compute sorts up to 300 dates) — not per stat
+        return HStack(spacing: 0) {
+            stat("\(s.totalSessions)", "sessions")
             Spacer(minLength: Spacing.sm)
             Rectangle().fill(Theme.divider).frame(width: 1, height: 26)
             Spacer(minLength: Spacing.sm)
-            stat("\(model.stats.dayStreak)", "day streak")
+            stat("\(s.dayStreak)", "day streak")
         }
         .padding(.vertical, Spacing.sm).padding(.horizontal, Spacing.md)
         .frame(maxWidth: .infinity)

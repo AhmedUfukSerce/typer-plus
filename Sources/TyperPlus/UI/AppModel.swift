@@ -144,9 +144,15 @@ final class AppModel: ObservableObject {
 
     func apply(ready: Bool, armed: Bool, isTyping: Bool, paused: Bool,
                statusText: String, mode: TypingProfile.Mode) {
-        self.ready = ready; self.armed = armed
-        self.isTyping = isTyping; self.paused = paused
-        self.statusText = statusText; self.mode = mode
+        // Assign only on change: every @Published write fires objectWillChange (re-rendering
+        // the whole SwiftUI tree) even when the value is identical, and AppController calls
+        // this from refreshUI() repeatedly. Guarding keeps idle/typing refreshes cheap.
+        if self.ready != ready { self.ready = ready }
+        if self.armed != armed { self.armed = armed }
+        if self.isTyping != isTyping { self.isTyping = isTyping }
+        if self.paused != paused { self.paused = paused }
+        if self.statusText != statusText { self.statusText = statusText }
+        if self.mode != mode { self.mode = mode }
     }
 
     // MARK: Data mutations
@@ -170,8 +176,15 @@ final class AppModel: ObservableObject {
         if let d = try? Data(contentsOf: sessionsURL),
            let v = try? dec.decode([TypingSession].self, from: d) { sessions = v }
     }
+    /// Background serial queue for session persistence — keeps the JSON encode + atomic disk
+    /// write OFF the main thread. recordSession() runs at the instant typing starts, so a
+    /// synchronous write here would hitch the first keystrokes.
+    private static let ioQueue = DispatchQueue(label: "com.aus.typerplus.sessions.io", qos: .utility)
+
     private func save<T: Encodable>(_ value: T, to url: URL) {
-        let enc = JSONEncoder(); enc.dateEncodingStrategy = .iso8601; enc.outputFormatting = [.prettyPrinted]
-        if let data = try? enc.encode(value) { try? data.write(to: url, options: .atomic) }
+        AppModel.ioQueue.async {
+            let enc = JSONEncoder(); enc.dateEncodingStrategy = .iso8601
+            if let data = try? enc.encode(value) { try? data.write(to: url, options: .atomic) }
+        }
     }
 }

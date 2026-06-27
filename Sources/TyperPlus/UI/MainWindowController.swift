@@ -56,10 +56,10 @@ final class MainWindowController {
 /// would be consumed just to re-activate the app (the button wouldn't fire until a 2nd
 /// click, and the activation would steal focus mid-run). With it, the Stop button halts
 /// the run on the very first click.
-private final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
+final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }
 
-private final class FirstMouseHostingController<Content: View>: NSHostingController<Content> {
+final class FirstMouseHostingController<Content: View>: NSHostingController<Content> {
     override func loadView() { view = FirstMouseHostingView(rootView: rootView) }
 }

@@ -175,9 +175,13 @@ final class AppController: NSObject, NSApplicationDelegate {
         menu.closePasteBox()
         NSApp.deactivate()           // hand focus back to the user's target app/field
         countdown.cancel()
-        if player.isRunning { player.abort() }
+        // (No player.abort() here — the guard above already proved !player.isRunning.)
 
         engine.forceUnicodeOnly = settings.forceUnicodeOnly
+        // Reliable delivery enforces a hard wall-clock floor between posted keys so a coarse
+        // run-loop wake can't burst them at a fragile target; overlap/stealth mode posts freely.
+        player.minPostGapMs = settings.reliableDelivery ? 5.0 : 0
+        let runMode = settings.mode   // capture: the mode the plan is built with == what's recorded
         var profile = settings.profile
         // VERBATIM by default: never inject self-made typos/grammar slips/false-starts, so
         // there are NO backspace-corrections that a target field's own autocorrect /
@@ -214,7 +218,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         countdown.start(seconds: secs, completion: { [weak self] in
             guard let self = self, gen == self.runGeneration, self.isTyping else { return }
             guard self.safeToRun else { self.finishTyping(); return }
-            self.appModel.recordSession(text: self.pendingText, mode: self.settings.mode)
+            self.appModel.recordSession(text: self.pendingText, mode: runMode)
             if usePaste {
                 // One atomic clipboard paste — no per-key events to drop/merge/duplicate, and
                 // the target's autocorrect / double-space→period never fire. Finish shortly
@@ -289,8 +293,13 @@ final class AppController: NSObject, NSApplicationDelegate {
         safetyWatchdog?.invalidate()
         let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self = self, self.isTyping else { return }
-            if !self.killSwitch.isArmed { _ = self.killSwitch.start() }
-            self.refreshUI()
+            // Only refresh the UI when the kill-switch arm state actually FLIPS — not twice a
+            // second unconditionally. The old unconditional refreshUI() re-pushed AppModel and
+            // re-rendered the whole SwiftUI tree every 0.5s during a run, adding main-thread
+            // churn (which itself worsens the coarse-wake bursting the delivery floor guards).
+            let armedBefore = self.killSwitch.isArmed
+            if !armedBefore { _ = self.killSwitch.start() }
+            if self.killSwitch.isArmed != armedBefore { self.refreshUI() }
         }
         RunLoop.main.add(t, forMode: .common)
         safetyWatchdog = t

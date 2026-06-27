@@ -1,13 +1,5 @@
 import Foundation
 
-/// Per-family score (0…1), used by the CLI scorecard (Detector.run).
-struct FamilyScore: Identifiable {
-    let id = UUID()
-    let name: String
-    let weight: Double
-    let score: Double
-}
-
 /// The DETECTOR (v2) — objective measurement instrument for Typer+ (per DETECTOR_SPEC.md,
 /// hardened by the Phase-C validation pass). It ingests a typing session as a timed event
 /// stream (the engine's [Action] on an absolute clock), derives the keystroke-dynamics /

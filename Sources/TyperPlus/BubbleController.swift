@@ -113,7 +113,11 @@ final class BubbleController: NSObject, NSWindowDelegate {
             onExpand:   { [weak self] in self?.setCollapsed(false) },
             collapsed:  collapsed)
             .environmentObject(model)
-        panel.contentView = NSHostingView(rootView: root)
+        // FirstMouseHostingView: the bubble is the user's primary surface and floats above
+        // other apps without taking focus, so a click on its Type/Cancel button would
+        // otherwise only make the panel key (needing a 2nd click). acceptsFirstMouse fires it
+        // on the first click.
+        panel.contentView = FirstMouseHostingView(rootView: root)
     }
 
     // MARK: - Drag (free movement) + persistence

@@ -51,6 +51,16 @@ final class Player {
     /// web/Electron field drops those) — we spread the catch-up over a few run-loop cycles.
     private let maxFlushPerTick = 12
 
+    /// HARD wall-clock floor (ms) between consecutive posted events, set by AppController for
+    /// reliable delivery (0 = off). This is the real fix for the "too fast / glitch" class:
+    /// the serialize per-key gap lives only in the PLANNED timeline, so on a coarse/late run-
+    /// loop wake the flush loop would otherwise post every due event microseconds apart,
+    /// recreating the dropped/merged-space + double-space→period corruption. Enforcing a
+    /// minimum monotonic-clock spacing converts any backlog into a paced drain instead of a
+    /// burst — reliability no longer depends on the run loop waking finely.
+    var minPostGapMs: Double = 0
+    private var lastPostNs: UInt64 = 0
+
     /// Held for the duration of a run. `.latencyCritical` stops App Nap / timer coalescing
     /// from throttling our Timers while Typer+ is BACKGROUNDED (it deactivates so the target
     /// app has focus) — without it the run loop wakes coarsely (~16–50ms) and the flush loop
@@ -75,6 +85,7 @@ final class Player {
         isRunning = true
         pausedAccumNs = 0
         pauseStartNs = 0
+        lastPostNs = 0
         startNs = Player.nowNs()
         scheduleTick(0)
     }
@@ -140,7 +151,16 @@ final class Player {
                 onPausedChange?(false)
             }
 
+            // Reliable delivery: never post two events closer than `minPostGapMs` in WALL
+            // CLOCK, even on a coarse wake — so the serialize per-key spacing can't collapse
+            // into a burst the target drops/duplicates. Reschedule for the remaining gap.
+            if minPostGapMs > 0, lastPostNs != 0 {
+                let sinceLastMs = Double(Player.nowNs() &- lastPostNs) / 1_000_000.0
+                if sinceLastMs < minPostGapMs { scheduleTick(minPostGapMs - sinceLastMs); return }
+            }
+
             execute(act.op)
+            lastPostNs = Player.nowNs()
             index += 1
             flushed += 1
             if flushed >= maxFlushPerTick { hitCap = true; break }   // yield to the run loop
@@ -161,6 +181,10 @@ final class Player {
     private func finish() {
         cancelTimer()
         endLatencyCriticalActivity()
+        // Belt-and-suspenders, same as abort(): if the plan's final shiftUp/charUp/keyUp was
+        // dropped by the OS under load, a key/modifier could be left "down" for the user's own
+        // typing. releaseHeldKeys() + resetModifiers() is idempotent (no-op when balanced).
+        releaseHeldKeys()
         isRunning = false
         isPaused = false
         actions = []

@@ -87,7 +87,7 @@ final class Settings {
     /// Clamped both ways so the triple-Esc kill gesture can never be configured into
     /// uselessness (too small to ever register, or absurdly large).
     var tripleEscWindowSeconds: Double {
-        get { let ms = d.double(forKey: Key.tripleEscWindowMs); return (ms > 0 ? ms : 900) / 1000.0 }
+        get { let ms = d.double(forKey: Key.tripleEscWindowMs); return min(3.0, max(0.3, (ms > 0 ? ms : 900) / 1000.0)) }
         set { d.set(max(0.3, min(newValue, 3.0)) * 1000.0, forKey: Key.tripleEscWindowMs) }
     }
 
@@ -97,7 +97,8 @@ final class Settings {
     }
 
     /// Force the pure-Unicode (virtualKey 0) injection path for ALL characters.
-    /// Default off — flip on only if the real-keycode path is rejected somewhere.
+    /// Default ON (registered in init: pure-Unicode = exact glyph, no wrong-keycode
+    /// corruption); flip OFF only for real-keycode "authenticity" where it's verified to help.
     var forceUnicodeOnly: Bool {
         get { d.bool(forKey: Key.forceUnicodeOnly) }
         set { d.set(newValue, forKey: Key.forceUnicodeOnly) }
