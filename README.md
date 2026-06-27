@@ -52,7 +52,7 @@ Reach for **Max Stealth** when a document's version history is the thing that ma
 Your text becomes a timed plan, then a player walks that plan and posts each key as a real event.
 
 <div align="center">
-<img src="docs/typer-pipeline.svg" alt="Pipeline: your text becomes a human-timed plan, played as real CGEvents the app sees as isTrusted keystrokes" width="720">
+<img src="docs/typer-pipeline.svg" alt="Pipeline: your text becomes a human-timed plan, played as real CGEvents the app sees as isTrusted keystrokes" width="760">
 </div>
 
 ## Build
