@@ -8,7 +8,9 @@ import Foundation
 ///     doubling) matches Dhakal §3.3,
 ///   • word-initial characters are (almost) never corrupted,
 ///   • corrections follow a two-loop model: most caught immediately, some after a
-///     few more keys, a ~1.17% residue left in.
+///     few more keys. (Char-level residue is OFF in every shipped preset —
+///     `uncorrectedResidue == 0` — so the everyday output is clean; the `.leave`
+///     path remains for a future mode that wants a small left-in residue.)
 /// The grammar/homophone layer is keyed on linguistic confusables (rule-based),
 /// left mid-stream and fixed in the end-of-text review pass.
 enum Typos {
@@ -142,7 +144,10 @@ enum Typos {
 
     /// A wrong-but-plausible variant for `word`, or nil. Preserves a leading capital.
     static func confusableVariant(for word: String, rng: RNG) -> String? {
-        let lower = word.lowercased()
+        // Normalize a curly apostrophe (U+2019, common in text pasted from Docs/web) to a
+        // straight one for the LOOKUP only, so "it's"/"you're" etc. still match the table.
+        // The typed output is unaffected (we return table values / the original word).
+        let lower = word.lowercased().replacingOccurrences(of: "\u{2019}", with: "'")
         guard let pool = confusables[lower] ?? articleSwaps[lower], let wrong = rng.element(pool) else { return nil }
         if let first = word.first, first.isUppercase {
             return wrong.prefix(1).uppercased() + wrong.dropFirst()

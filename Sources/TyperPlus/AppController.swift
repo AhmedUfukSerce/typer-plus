@@ -161,7 +161,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         let normalized = text.replacingOccurrences(of: "\r\n", with: "\n")
                              .replacingOccurrences(of: "\r", with: "\n")
         let cleaned = TextCleanup.clean(normalized)
-        guard !cleaned.isEmpty else { return }
+        guard !cleaned.isEmpty else { NSSound.beep(); return }   // nothing to type after cleanup
         pendingText = cleaned
         guard Permissions.allReady else {
             Permissions.requestAll()
@@ -170,7 +170,14 @@ final class AppController: NSObject, NSApplicationDelegate {
             refreshUI()
             return
         }
-        guard armIfPossible() else { refreshUI(); return }
+        guard armIfPossible() else {
+            // The kill switch couldn't arm — typically Input Monitoring isn't granted even
+            // though Accessibility is (allReady only checks AX). Prompt for it + open Settings
+            // instead of silently bailing with just a "kill switch unavailable" status.
+            _ = Permissions.requestListenEvents()
+            Permissions.openAccessibilitySettings()
+            refreshUI(); return
+        }
 
         menu.closePasteBox()
         NSApp.deactivate()           // hand focus back to the user's target app/field
@@ -217,7 +224,9 @@ final class AppController: NSObject, NSApplicationDelegate {
         let secs = Int((quick ? settings.quickCountdownSeconds : settings.countdownSeconds).rounded())
         countdown.start(seconds: secs, completion: { [weak self] in
             guard let self = self, gen == self.runGeneration, self.isTyping else { return }
-            guard self.safeToRun else { self.finishTyping(); return }
+            // Secure Input (a password field) or a downed kill switch at the moment of delivery:
+            // beep so the run isn't silently dropped (the user sees it "finish" doing nothing).
+            guard self.safeToRun else { NSSound.beep(); self.finishTyping(); return }
             self.appModel.recordSession(text: self.pendingText, mode: runMode)
             if usePaste {
                 // One atomic clipboard paste — no per-key events to drop/merge/duplicate, and
@@ -259,8 +268,11 @@ final class AppController: NSObject, NSApplicationDelegate {
         pb.clearContents()
         pb.setString(text, forType: .string)
         engine.pasteShortcut()
-        // Restore once the target has consumed the paste (so we don't clobber what it read).
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        // Restore only after the target has had time to consume the paste. A fragile/busy web
+        // editor (the whole reason paste mode exists) may read the clipboard well after the ⌘V
+        // event, so restoring too soon would make it paste the user's OLD clipboard. 0.8s is a
+        // safer margin than the previous 0.5s.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
             self?.restorePasteboard(pb, items: saved)
         }
     }

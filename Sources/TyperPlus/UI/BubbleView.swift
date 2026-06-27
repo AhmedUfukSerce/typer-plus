@@ -36,60 +36,17 @@ enum BubbleLayout {
 
 // MARK: - Snap anchor (9-way grid, persisted)
 
-/// Where the bubble sits when snapped. Free-dragging clears the snap (`.free`), but the
-/// host remembers the last *grid* anchor so a re-snap returns there. Raw strings are the
-/// persisted form in `Settings.bubbleCorner`.
-enum BubbleAnchor: String, CaseIterable, Codable {
-    case topLeft, topCenter, topRight
-    case midLeft, center, midRight
-    case botLeft, botCenter, botRight
-    case free   // user-dragged; not part of the 3×3 grid
-
-    /// Row-major 3×3 layout for the position picker.
-    static let grid: [[BubbleAnchor]] = [
-        [.topLeft, .topCenter, .topRight],
-        [.midLeft, .center,    .midRight],
-        [.botLeft, .botCenter, .botRight],
-    ]
-
-    var label: String {
-        switch self {
-        case .topLeft: "Top left";    case .topCenter: "Top";    case .topRight: "Top right"
-        case .midLeft: "Left";        case .center: "Center";    case .midRight: "Right"
-        case .botLeft: "Bottom left"; case .botCenter: "Bottom"; case .botRight: "Bottom right"
-        case .free: "Custom"
-        }
-    }
-
+/// The bubble's DEFAULT resting spot — bottom-right of the active screen. Free-dragging
+/// stores a custom origin in `Settings.bubblePoint`; this is the fallback when none is set.
+/// (The old 9-way snap grid + position picker were removed when free-drag replaced them.)
+enum BubbleAnchor {
     /// Bottom-left origin (AppKit screen coords) for a panel of `size` within `screen`
-    /// (pass the screen's `visibleFrame`), inset by `margin` from the edges.
-    func origin(in screen: NSRect, size: CGSize, margin: CGFloat = BubbleLayout.edgeMargin) -> CGPoint {
-        let left   = screen.minX + margin
-        let right  = screen.maxX - size.width - margin
-        let cx     = screen.midX - size.width / 2
-        let bottom = screen.minY + margin
-        let top    = screen.maxY - size.height - margin
-        let cy     = screen.midY - size.height / 2
-        switch self {
-        case .topLeft:   return CGPoint(x: left,  y: top)
-        case .topCenter: return CGPoint(x: cx,    y: top)
-        case .topRight:  return CGPoint(x: right, y: top)
-        case .midLeft:   return CGPoint(x: left,  y: cy)
-        case .center:    return CGPoint(x: cx,    y: cy)
-        case .midRight:  return CGPoint(x: right, y: cy)
-        case .botLeft:   return CGPoint(x: left,  y: bottom)
-        case .botCenter: return CGPoint(x: cx,    y: bottom)
-        case .botRight:  return CGPoint(x: right, y: bottom)
-        case .free:      return CGPoint(x: cx,    y: cy)
-        }
+    /// (pass the screen's `visibleFrame`), inset by `margin` from the bottom-right edges.
+    static func defaultOrigin(in screen: NSRect, size: CGSize,
+                              margin: CGFloat = BubbleLayout.edgeMargin) -> CGPoint {
+        CGPoint(x: screen.maxX - size.width - margin, y: screen.minY + margin)
     }
 }
-
-/// `Settings.swift` persists the bubble's snap under the name `BubbleCorner`. The bubble
-/// evolved into the richer 9-way `BubbleAnchor`; this alias keeps the persistence layer
-/// pointed at a single source of truth (no duplicate enum; the old `.topRight` raw value
-/// still resolves, so no migration is needed).
-typealias BubbleCorner = BubbleAnchor
 
 // MARK: - Run phase (drives the CTA + ambient state)
 

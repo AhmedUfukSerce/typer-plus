@@ -132,7 +132,7 @@ enum TyperPlusSelfTest {
             let bounds: [(TypingProfile.Mode, ClosedRange<Double>, ClosedRange<Double>, Double, Double, Double)] = [
                 (.careful,   220...420, 110...148, 0.04,  0.05, 0.45),
                 (.ultraFast,  35...95,   70...108, 0.30,  0.04, 0.40),  // ~230 wpm — fast but human (structured rollover ⇒ real CV + positive autocorr)
-                (.maxStealth, 150...330, 105...134, 0.08, -1.0, 0.45)   // composition idle ⇒ full-stream autocorr ~0 (human too)
+                (.maxStealth, 150...330, 105...134, 0.08, -0.05, 0.45)  // composition idle dilutes autocorr ~0; small real floor (not -1.0) keeps the check two-sided
             ]
             let N = 8
             for (mode, medRange, dwellRange, minOverlap, lagFloor, cvFloor) in bounds {

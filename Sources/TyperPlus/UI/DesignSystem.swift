@@ -31,10 +31,6 @@ enum Theme {
     static let hoverFill      = Color(red: 0.10, green: 0.09, blue: 0.06).opacity(0.035)
     static let pressedFill    = Color(red: 0.10, green: 0.09, blue: 0.06).opacity(0.060)
 
-    // Dark ink (text + the rare neutral-dark surface).
-    static let buttonBlack        = Color(red: 0.106, green: 0.098, blue: 0.086) // #1B1916
-    static let buttonBlackPressed = Color(red: 0.169, green: 0.157, blue: 0.141) // #2B2824
-
     // The single rationed accent + primary — RenderPlus sage-olive green (was teal).
     // Name kept as `teal` so every existing call site re-tints to green automatically.
     static let teal        = Color(red: 0.309, green: 0.435, blue: 0.321) // #4F6F52 sage-olive green

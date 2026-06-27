@@ -29,7 +29,6 @@ final class Settings {
         static let bubbleHotkeyKeyCode = "bubbleHotkeyKeyCode"
         static let bubbleHotkeyModifiers = "bubbleHotkeyModifiers"
         static let bubbleVisible = "bubbleVisible"
-        static let bubbleCorner = "bubbleCorner"
         static let bubblePointX = "bubblePointX"
         static let bubblePointY = "bubblePointY"
         static let bubbleHasCustomPoint = "bubbleHasCustomPoint"
@@ -59,7 +58,6 @@ final class Settings {
             Key.bubbleHotkeyKeyCode: Int(kVK_ANSI_B),
             Key.bubbleHotkeyModifiers: Int(cmdKey | optionKey),
             Key.bubbleVisible: false,
-            Key.bubbleCorner: BubbleCorner.botRight.rawValue,
             Key.bubbleHasCustomPoint: false,
             Key.bubbleCollapsed: false
         ])
@@ -177,14 +175,8 @@ final class Settings {
         set { d.set(newValue, forKey: Key.bubbleCollapsed) }
     }
 
-    /// Snap anchor (9-way grid) used when no custom drag-point is stored.
-    var bubbleCorner: BubbleCorner {
-        get { BubbleCorner(rawValue: d.string(forKey: Key.bubbleCorner) ?? "") ?? .botRight }
-        set { d.set(newValue.rawValue, forKey: Key.bubbleCorner) }
-    }
-
     /// The exact dragged origin (screen coords, bottom-left). `nil` means "use the
-    /// corner". Set via `setBubblePoint`; cleared by snapping to a corner.
+    /// default bottom-right position". Set via `setBubblePoint`.
     var bubblePoint: CGPoint? {
         get {
             guard d.bool(forKey: Key.bubbleHasCustomPoint) else { return nil }
@@ -196,11 +188,6 @@ final class Settings {
         d.set(true, forKey: Key.bubbleHasCustomPoint)
         d.set(Double(p.x), forKey: Key.bubblePointX)
         d.set(Double(p.y), forKey: Key.bubblePointY)
-    }
-    /// Snap to a corner and forget any custom point.
-    func setBubbleCorner(_ c: BubbleCorner) {
-        d.set(false, forKey: Key.bubbleHasCustomPoint)
-        bubbleCorner = c
     }
 
     /// The persisted per-install typing persona (drawn once, then stable so the same

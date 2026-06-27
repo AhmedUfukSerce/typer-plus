@@ -1,9 +1,9 @@
 import AppKit
 import SwiftUI
 
-// NOTE: the snap-anchor type (`BubbleAnchor`, aliased `BubbleCorner`), `BubbleLayout`,
-// and the SwiftUI `BubbleView` all live in UI/BubbleView.swift. This file owns only the
-// host NSPanel + position persistence and the bridge into the AppController typing path.
+// NOTE: the default-position helper (`BubbleAnchor`), `BubbleLayout`, and the SwiftUI
+// `BubbleView` all live in UI/BubbleView.swift. This file owns only the host NSPanel +
+// position persistence and the bridge into the AppController typing path.
 
 // MARK: - The panel
 
@@ -154,7 +154,7 @@ final class BubbleController: NSObject, NSWindowDelegate {
     private func visibleOrigin(_ panel: NSPanel, for size: NSSize) -> NSPoint {
         let screen = NSScreen.screens.first { $0.frame.intersects(panel.frame) } ?? NSScreen.main
         guard let vf = screen?.visibleFrame else { return Settings.shared.bubblePoint ?? panel.frame.origin }
-        var o = Settings.shared.bubblePoint ?? BubbleAnchor.botRight.origin(in: vf, size: size)
+        var o = Settings.shared.bubblePoint ?? BubbleAnchor.defaultOrigin(in: vf, size: size)
         o.x = min(max(o.x, vf.minX + 6), vf.maxX - size.width - 6)
         o.y = min(max(o.y, vf.minY + 6), vf.maxY - size.height - 6)
         return o
