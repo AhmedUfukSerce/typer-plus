@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 250" width="760" height="250" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+<text x="6" y="34" font-size="16" font-weight="700" fill="#e6edf3">How it works: your text becomes real keystrokes</text>
+<defs><marker id="ardark" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8b949e"/></marker></defs>
+<rect x="20" y="64" width="128" height="92" rx="10" fill="#11161d" stroke="#58a6ff" stroke-width="1.5"/>
+<text x="84.0" y="106" font-size="15.5" font-weight="700" fill="#e6edf3" text-anchor="middle">your text</text><text x="84.0" y="130" font-size="12" fill="#8b949e" text-anchor="middle">what you paste</text>
+<line x1="152" y1="110.0" x2="182" y2="110.0" stroke="#8b949e" stroke-width="2" marker-end="url(#ardark)"/>
+<rect x="188" y="64" width="150" height="92" rx="10" fill="#11161d" stroke="#58a6ff" stroke-width="1.5"/>
+<text x="263.0" y="106" font-size="15.5" font-weight="700" fill="#e6edf3" text-anchor="middle">Planner</text><text x="263.0" y="130" font-size="12" fill="#8b949e" text-anchor="middle">a human-timed plan</text>
+<line x1="342" y1="110.0" x2="366" y2="110.0" stroke="#8b949e" stroke-width="2" marker-end="url(#ardark)"/>
+<rect x="372" y="64" width="196" height="92" rx="10" fill="#11161d" stroke="#58a6ff" stroke-width="1.5"/>
+<text x="470.0" y="98" font-size="14.5" font-weight="700" fill="#e6edf3" text-anchor="middle">Player</text><text x="470.0" y="118" font-size="14.5" font-weight="700" fill="#e6edf3" text-anchor="middle">+ KeyboardEngine</text><text x="470.0" y="140" font-size="11.5" fill="#8b949e" text-anchor="middle">real CGEvents, HID layer</text>
+<line x1="572" y1="110.0" x2="590" y2="110.0" stroke="#8b949e" stroke-width="2" marker-end="url(#ardark)"/>
+<rect x="596" y="64" width="144" height="92" rx="10" fill="#0f2a1a" stroke="#3fb950" stroke-width="1.5"/>
+<text x="668.0" y="106" font-size="15.5" font-weight="700" fill="#e6edf3" text-anchor="middle">the app</text><text x="668.0" y="130" font-size="12" fill="#8b949e" text-anchor="middle">isTrusted keys</text>
+<text x="724" y="90" font-size="16" fill="#3fb950" text-anchor="middle">&#10003;</text>
+<text x="6" y="208" font-size="12.5" fill="#6e7681">Inside the Planner: timing, dwell and pauses are always on. Typos and grammar are opt-in.</text>
+<text x="6" y="230" font-size="12.5" fill="#6e7681">Esc Esc Esc stops it instantly. A password field or Secure Input freezes it.</text>
+</svg>

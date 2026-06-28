@@ -28,13 +28,19 @@ Every character goes in through the macOS HID layer as a `CGEvent`, so the app y
 A naive bot gives itself away on timing alone. It fires keys on a metronome, often faster than fingers can physically move, with almost no variation. A person never types like that. The gaps between your keystrokes are uneven, they skew toward the short side with a long tail of pauses, and they never drop below a physical floor.
 
 <div align="center">
-<img src="docs/typer-rhythm.svg" alt="Two timelines: a bot firing keys on an even metronome versus a person typing with uneven gaps" width="720">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/typer-rhythm-dark.svg">
+  <img alt="Bot metronome vs human keystroke rhythm" src="docs/typer-rhythm-light.svg" width="760">
+</picture>
 </div>
 
 Typer+ draws every gap from the same shaped distribution real typists produce, an ex-Gaussian: a tight core with a long right tail. The numbers come straight from the keystroke-dynamics research (the anchor is Dhakal et al. 2018, 136 million keystrokes), and they are laid out in [`RESEARCH.md`](RESEARCH.md).
 
 <div align="center">
-<img src="docs/typer-iki.svg" alt="Distribution of time between keystrokes: a person's right-skewed curve versus a bot's narrow sub-50ms spike" width="760">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/typer-iki-dark.svg">
+  <img alt="Inter-key interval distribution, person vs bot" src="docs/typer-iki-light.svg" width="760">
+</picture>
 </div>
 
 All of that timing is on by default, and it is what the rhythm and the distribution above are really about. Turn on the human-errors layer in Settings and it goes a step further: it makes the occasional typo and goes back to fix it, adjacent-key slips, transpositions, doublings, sometimes corrected on the spot and sometimes a few characters later, the way you catch your own typo a beat too late, plus grammar and homophone slips it rereads and tidies at the end. The header animation up top is that layer in action. With reliable delivery switched off it will also let the next key start before the last one lifts, the way fast typists overlap.
@@ -55,7 +61,10 @@ Reach for **Max Stealth** when a document's version history is the thing that ma
 Your text becomes a timed plan, then a player walks that plan and posts each key as a real event.
 
 <div align="center">
-<img src="docs/typer-pipeline.svg" alt="Pipeline: your text becomes a human-timed plan, played as real CGEvents the app sees as isTrusted keystrokes" width="760">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/typer-pipeline-dark.svg">
+  <img alt="How it works: text becomes real keystrokes" src="docs/typer-pipeline-light.svg" width="760">
+</picture>
 </div>
 
 ## Build
