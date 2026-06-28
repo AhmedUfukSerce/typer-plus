@@ -2,7 +2,10 @@
 
 # Typer+
 
-<img src="docs/typer-hero.svg" alt="Typer+ typing a line character by character, making a typo and backspacing to fix it" width="720">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/typer-hero-dark.svg">
+  <img alt="Typer+ typing a line and correcting a typo" src="docs/typer-hero-light.svg" width="564">
+</picture>
 
 **A macOS menu bar app that types your text the way a person would, one real keystroke at a time.**
 
